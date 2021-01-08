@@ -2,9 +2,22 @@
 
 
 void setup() {
-  // put your setup code here, to run once:
+
+  Serial.begin(115200);
+  init_HX711(DOUT_PIN_ACCEL, SCK_PIN_ACCEL);
+
+
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+
+  accelReading = readLoadCell(accelReadingLast);
+  //if (accelReadingLast != accelReading) {
+  //  Serial.println(millis());
+  //}
+  accelReadingLast = accelReading;
+
+  Serial.println(accelReading);
+  
+
 }
