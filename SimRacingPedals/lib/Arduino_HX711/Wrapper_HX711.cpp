@@ -1,42 +1,109 @@
 #include "WRAPPER_HX711.h"
 HX711 LoadCellAccel;                                            //instantiate the class
+HX711 LoadCellBrake;
+HX711 LoadCellClutch;
 
-uint8_t readingRetryFlag;
-uint16_t flagTimer;
-uint16_t flagTimerStart;
+
+uint8_t readingRetryFlag1;
+uint16_t flagTimer1;
+uint16_t flagTimerStart1;
 uint16_t delayTime;
 
-void init_HX711(uint8_t dOutPin, uint8_t sckPin) {
-    LoadCellAccel.begin(dOutPin, sckPin);
+uint8_t readingRetryFlag2;
+uint16_t flagTimer2;
+uint16_t flagTimerStart2;
 
-    readingRetryFlag = 0;                                              // is set to 1 if LoadCellAccel.is_ready() returns false and is set to 0 when timer is passed
-    flagTimer = 0;
-    flagTimerStart = millis();
+
+uint8_t readingRetryFlag3;
+uint16_t flagTimer3;
+uint16_t flagTimerStart3;
+
+
+void init_HX711(uint8_t dOutPinAccel, uint8_t sckPinAccel, uint8_t dOutPinBrake, uint8_t sckPinBrake, uint8_t dOutPinClutch, uint8_t sckPinClutch) {
+    LoadCellAccel.begin(dOutPinAccel, sckPinAccel);
+    LoadCellBrake.begin(dOutPinBrake, sckPinBrake);
+    LoadCellClutch.begin(dOutPinClutch, sckPinClutch);
+
+    readingRetryFlag1 = 0;                                              // is set to 1 if LoadCellAccel.is_ready() returns false and is set to 0 when timer is passed
+    flagTimer1 = 0;
+    flagTimerStart1 = millis();
+    readingRetryFlag2 = 0;
+    flagTimer2 = 0;
+    flagTimerStart2 = millis();
+    readingRetryFlag3 = 0;
+    flagTimer3 = 0;
+    flagTimerStart3 = millis();
     delayTime = 20;                                                     // in ms
 }
 
-long readLoadCell(long lastReading) {
+long readAccel(long lastAccelReading) {
 
-    flagTimer = millis();
+    flagTimer1 = millis();
 
-    if ((flagTimer-flagTimerStart) > delayTime) {
-        readingRetryFlag = 0;
+    if ((flagTimer1-flagTimerStart1) > delayTime) {
+        readingRetryFlag1 = 0;
     }
-
-
-    if (readingRetryFlag == 0) {
+    if (readingRetryFlag1 == 0) {
         if (LoadCellAccel.is_ready()) {
-            lastReading = LoadCellAccel.read();
+            lastAccelReading = LoadCellAccel.read();
             //Serial.print("HX711 reading: ");
-            //Serial.println(lastReading);
+            //Serial.println(lastAccelReading);
 
-            readingRetryFlag = 1;
-            flagTimerStart = millis();
+            readingRetryFlag1 = 1;
+            flagTimerStart1 = millis();
         } else {
-            return lastReading;
+            return lastAccelReading;
             //Serial.println("HX711 not found.");
             //delay(1000);
         }
     }
-    return lastReading;
-}
+    return lastAccelReading;
+} 
+
+long readBrake(long lastBrakeReading) {
+
+    flagTimer2 = millis();
+
+    if ((flagTimer2-flagTimerStart2) > delayTime) {
+        readingRetryFlag2 = 0;
+    }
+    if (readingRetryFlag2 == 0) {
+        if (LoadCellBrake.is_ready()) {
+            lastBrakeReading = LoadCellBrake.read();
+            //Serial.print("HX711 reading: ");
+            //Serial.println(lastAccelReading);
+
+            readingRetryFlag2 = 1;
+            flagTimerStart2 = millis();
+        } else {
+            return lastBrakeReading;
+            //Serial.println("HX711 not found.");
+            //delay(1000);
+        }
+    }
+    return lastBrakeReading;
+} 
+
+long readClutch(long lastClutchReading) {
+
+    flagTimer3 = millis();
+
+    if ((flagTimer3-flagTimerStart3) > delayTime) {
+        readingRetryFlag3 = 0;
+    }
+    if (readingRetryFlag3 == 0) {
+        if (LoadCellClutch.is_ready()) {
+            lastClutchReading = LoadCellClutch.read();
+            //Serial.print("HX711 reading: ");
+            //Serial.println(lastAccelReading);
+
+            readingRetryFlag3 = 1;
+            flagTimerStart3 = millis();
+        } else {
+            return lastClutchReading;
+            //Serial.println("HX711 not found.");
+            //delay(1000);
+        }
+    }
+    return lastClutchReading;
+} 
