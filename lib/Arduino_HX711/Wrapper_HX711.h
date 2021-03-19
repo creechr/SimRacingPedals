@@ -18,6 +18,6 @@ void init_HX711(uint8_t dOutPinAccel, uint8_t sckPinAccel, uint8_t dOutPinBrake,
 long readAccel(long lastAccelReading);
 long readBrake(long lastBrakeReading);
 long readClutch(long lastClutchReading);
-
+float returnScaledReading(long minValue, long maxValue, long currentValue, float scalingFactor);
 
 #endif
