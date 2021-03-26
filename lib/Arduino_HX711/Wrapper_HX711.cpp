@@ -1,5 +1,6 @@
 #include "WRAPPER_HX711.h"
-HX711 LoadCellAccel;                                            //instantiate the class
+//instantiate the class
+HX711 LoadCellAccel;                                         
 HX711 LoadCellBrake;
 HX711 LoadCellClutch;
 
@@ -19,6 +20,35 @@ uint16_t flagTimer3;
 uint16_t flagTimerStart3;
 
 float scaledReading;
+
+long accelReading = 0;
+long accelReadingLast = 0;
+
+long brakeReading = 0;
+long brakeReadingLast = 0;
+
+long clutchReading = 0;
+long clutchReadingLast = 0;
+
+unsigned long timeNow = 0;
+unsigned long calibrationStartTime = 0;
+unsigned long calibrationPeriod = 10000; 
+bool calibrationUnderway = false;
+
+long minAccelRead;     
+long maxAccelRead;
+long minBrakeRead;
+long maxBrakeRead;
+long minClutchRead;
+long maxClutchRead;
+
+float maxSensorOutputVal = 100.0;
+
+float accelScalingFactor;
+float brakeScalingFactor;
+float clutchScalingFactor;
+
+
 
 void init_HX711(uint8_t dOutPinAccel, uint8_t sckPinAccel, uint8_t dOutPinBrake, uint8_t sckPinBrake, uint8_t dOutPinClutch, uint8_t sckPinClutch) {
     LoadCellAccel.begin(dOutPinAccel, sckPinAccel);
@@ -118,4 +148,82 @@ float returnScaledReading(long minValue, long maxValue, long currentValue, float
     }
     // Serial.printf("Scaled reading: %f\n", scaledReading);
     return scaledReading; 
+}
+
+void getSensorValues(){
+  accelReading = readAccel(accelReadingLast);
+  brakeReading = readBrake(brakeReadingLast);
+  clutchReading = readClutch(clutchReadingLast);
+
+  accelReadingLast = accelReading;
+  brakeReadingLast = brakeReading;
+  clutchReadingLast = clutchReading;
+}
+
+void calibrate(){
+  if (Serial.available() > 0) {
+      String a = Serial.readString(); // read the incoming data as string
+      // Serial.print("Received String: ");
+      // Serial.println(a);
+
+      // start calibration window
+      if (a == "calibrate")
+      {
+          calibrationStartTime = millis();
+          calibrationUnderway = true;
+          Serial.println("Calibration mode started"); 
+          minAccelRead = accelReading;
+          maxAccelRead = accelReading;  // resets min/max values if calibration is run again
+
+          minBrakeRead = brakeReading;
+          maxBrakeRead = brakeReading;
+
+          minClutchRead = clutchReading;
+          maxClutchRead = clutchReading;
+      }
+
+  }
+
+  timeNow = millis();
+
+  if (calibrationUnderway){
+      if (timeNow < (calibrationStartTime + calibrationPeriod)){
+          // Serial.println("Calibration in progress");
+
+          minAccelRead = min(accelReading, minAccelRead);
+          maxAccelRead = max(accelReading, maxAccelRead);
+
+          minBrakeRead = min(brakeReading, minBrakeRead);
+          maxBrakeRead = max(brakeReading, maxBrakeRead);
+
+          minClutchRead = min(clutchReading, minClutchRead);
+          maxClutchRead = max(clutchReading, maxClutchRead);
+    
+      } else {
+        calibrationUnderway = false;
+        Serial.println("Calibration finished");
+
+        accelScalingFactor = maxSensorOutputVal / (maxAccelRead - minAccelRead);        
+        Serial.printf("Accel min val: %d\n", minAccelRead);
+        Serial.printf("Accel max val: %d\n", maxAccelRead);
+        Serial.printf("Accel scaling factor: %f\n", accelScalingFactor);
+
+        brakeScalingFactor = maxSensorOutputVal / (maxBrakeRead - minBrakeRead);
+        Serial.printf("Brake min val: %d\n", minBrakeRead);
+        Serial.printf("Brake max val: %d\n", maxBrakeRead);
+        Serial.printf("Brake scaling factor: %f\n", brakeScalingFactor);
+
+        clutchScalingFactor = maxSensorOutputVal / (maxClutchRead - minClutchRead);
+        Serial.printf("Clutch min val: %d\n", minClutchRead);
+        Serial.printf("Clutch max val: %d\n", maxClutchRead);
+        Serial.printf("Clutch scaling factor: %f\n", clutchScalingFactor);
+
+      }
+  }
+}
+
+void returnScaledReadings(){
+  accelReadingScaled = returnScaledReading(minAccelRead, maxAccelRead, accelReading, accelScalingFactor);
+  brakeReadingScaled = returnScaledReading(minBrakeRead, maxBrakeRead, brakeReading, brakeScalingFactor);
+  clutchReadingScaled = returnScaledReading(minClutchRead, maxClutchRead, clutchReading, clutchScalingFactor);
 }
