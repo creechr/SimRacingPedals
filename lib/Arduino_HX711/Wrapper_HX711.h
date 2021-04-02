@@ -26,6 +26,7 @@ long readClutch(long lastClutchReading);
 float returnScaledReading(long minValue, long maxValue, long currentValue, float scalingFactor);
 void getSensorValues();
 void calibrate();
-void returnScaledReadings();
+void returnAllScaledReadings();
+void printCalibrationData();
 
 #endif
